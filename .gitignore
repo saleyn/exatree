@@ -1,0 +1,37 @@
+# Elixir
+/_build
+/cover
+/deps
+.fetch
+erl_crash.dump
+*.ez
+*.beam
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
+.elixir_ls/
+.helix/
+
+# C++
+*.o
+*.so
+*.a
+*.dylib
+build/
+cmake_build/
+*.gcno
+*.gcda
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+doc/
+.docs/
+
+# Mix
+.mix/
