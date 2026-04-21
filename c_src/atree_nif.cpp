@@ -2,6 +2,7 @@
 #include "atree.h"
 #include <cstring>
 #include <cstdio>
+#include <functional>
 
 // ============================================================================
 // NIF Helper Functions & Macros
@@ -11,11 +12,21 @@
 
 static ErlNifResourceType* ATREE_RESOURCE_TYPE = nullptr;
 
+// Defaults for tree resources - customized via on_load options
+struct TreeResourceDefaults {
+    const uint32_t default_max_match;
+
+    TreeResourceDefaults(uint32_t max_match = 100)
+        : default_max_match(max_match)
+    {}
+};
+
 // Resource data struct - simple wrapper around tree pointer
 struct TreeResource {
     ATree tree;
+    uint32_t max_match;
     
-    TreeResource() : tree(nullptr) {}
+    TreeResource() noexcept : tree(nullptr), max_match(0) {}
     ~TreeResource() {
         tree.reset();
     }
@@ -42,6 +53,8 @@ static struct {
     ERL_NIF_TERM atom_null_tree;
     ERL_NIF_TERM atom_bid_cpm;
     ERL_NIF_TERM atom_campaign_id;
+    ERL_NIF_TERM atom_max_match;
+    ERL_NIF_TERM atom_take;
 } ATOMS;
 
 // ============================================================================
@@ -53,21 +66,40 @@ static struct {
  * Create a new empty A-Tree
  */
 static ERL_NIF_TERM nif_build(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-    UNUSED(argc);
-    UNUSED(argv);
-    
-    TreeResource* res = static_cast<TreeResource*>(
-        enif_alloc_resource(ATREE_RESOURCE_TYPE, sizeof(TreeResource)));
-    
-    if (!res) {
+    auto deleter = [](TreeResource* res) {
+        res->~TreeResource();
+        enif_release_resource(res);
+    };
+    auto res_ptr = std::unique_ptr<TreeResource, decltype(deleter)>(
+        static_cast<TreeResource*>(enif_alloc_resource(ATREE_RESOURCE_TYPE, sizeof(TreeResource))),
+        deleter
+    );
+
+    if (!res_ptr)
         return enif_make_tuple2(env, ATOMS.atom_error,
                               enif_make_string(env, "malloc failed", ERL_NIF_LATIN1));
-    }
-    
-    try {
-        // Call placement new to initialize the struct
-        new (res) TreeResource();
+
+    auto res = res_ptr.get();
+
+    // Call placement new to initialize the struct (guaranteed not to throw
+    // since constructor is noexcept)
+    new (res) TreeResource();
+
+    auto tree_defaults = static_cast<TreeResourceDefaults*>(enif_priv_data(env));
+    res->max_match     = tree_defaults->default_max_match;
+
+    if (argc > 0) {
+        if (!enif_is_map(env, argv[0]))
+            return raise_error(env, "options must be a map");
         
+        ERL_NIF_TERM max_match_term;
+        if (enif_get_map_value(env, argv[0], ATOMS.atom_max_match, &max_match_term)) {
+            if (!enif_get_uint(env, max_match_term, &res->max_match))
+                return raise_error(env, "'max_match' value must be a positive integer");
+        }
+    }
+
+    try {
         // Build empty tree with default dimensions
         std::vector<DimensionType> dimensions;
         dimensions.push_back(DimensionType::AGE_RANGE);
@@ -81,12 +113,13 @@ static ERL_NIF_TERM nif_build(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
         ATreeBuilder builder;
         res->tree = builder.build(dimensions);
         
-        ERL_NIF_TERM term = enif_make_resource(env, res);
+        auto tree_term = enif_make_resource(env, res);
         enif_release_resource(res);
         
-        return term;
+        res_ptr.release(); // release ownership since we're returning the resource
+
+        return tree_term;
     } catch (const std::exception& e) {
-        enif_release_resource(res);
         return raise_error(env, e.what());
     }
 }
@@ -107,7 +140,7 @@ static ERL_NIF_TERM nif_insert_order(ErlNifEnv* env, int argc, const ERL_NIF_TER
                               enif_make_string(env, "null tree", ERL_NIF_LATIN1));
     }
     
-    // Extract campaign_id (as binary}
+    // Extract campaign_id (as binary)
     ErlNifBinary campaign_bin;
     char campaign_id[256];
     if (enif_is_binary(env, argv[1])) {
@@ -123,7 +156,7 @@ static ERL_NIF_TERM nif_insert_order(ErlNifEnv* env, int argc, const ERL_NIF_TER
         return enif_make_badarg(env);
     }
     
-    // Extract bid_cppm
+    // Extract bid_cpm
     double bid_double;
     if (!enif_get_double(env, argv[2], &bid_double)) {
         return enif_make_badarg(env);
@@ -175,12 +208,12 @@ static ERL_NIF_TERM nif_insert_order(ErlNifEnv* env, int argc, const ERL_NIF_TER
     try {
         StandingOrder order;
         order.campaign_id = campaign_id;
-        order.bid_cppm = static_cast<float>(bid_double);
+        order.bid_cpm = static_cast<float>(bid_double);
         
         ATreeBuilder builder;
         builder.insert_order(tree_res->tree, order, attr_map);
         
-        // Return the same tree reference (tree is modified in place)
+        // Return the tree directly
         return argv[0];
     } catch (const std::exception& e) {
         return raise_error(env, e.what());
@@ -191,45 +224,62 @@ static ERL_NIF_TERM nif_insert_order(ErlNifEnv* env, int argc, const ERL_NIF_TER
  * match(TreeRef, ImpressionMap) -> [Orders] (raise exception on error)
  */
 static ERL_NIF_TERM nif_match(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-    if (argc != 2) return enif_make_badarg(env);
+    if (argc < 2 || argc > 3) return enif_make_badarg(env);
     
     TreeResource* tree_res = nullptr;
     if (!enif_get_resource(env, argv[0], ATREE_RESOURCE_TYPE, (void**)&tree_res))
         return enif_make_badarg(env);
     
     if (!tree_res || !tree_res->tree)
-        return raise_error(env, atom_null_tree);
+        return raise_error(env, ATOMS.atom_null_tree);
     
     // Extract impression map
     Impression impression;
     ERL_NIF_TERM map = argv[1];
     
+    uint32_t take = tree_res->max_match;
+    if (argc == 3) {
+        ERL_NIF_TERM options = argv[2];
+        if (!enif_is_map(env, options))
+            return raise_error(env, "options must be a map");
+
+        ERL_NIF_TERM take_term;
+        if (enif_get_map_value(env, options, ATOMS.atom_take, &take_term)) {
+            if (!enif_get_uint(env, take_term, &take))
+                return raise_error(env, "'take' value must be a positive integer");
+        }
+    }
+
     ErlNifMapIterator iter;
     if (enif_map_iterator_create(env, map, &iter, ERL_NIF_MAP_ITERATOR_FIRST)) {
         ERL_NIF_TERM key, value;
         
         while (enif_map_iterator_get_pair(env, &iter, &key, &value)) {
-            char key_str[64];
+            char key_str[256];
             char val_str[256];
             
+            // TODO: deal with values that are larger than 256 bytes (unlikely but possible)
+
             // Extract key as binary
             ErlNifBinary key_bin;
             if (enif_inspect_binary(env, key, &key_bin) && key_bin.size < sizeof(key_str)) {
-                memset(key_str, 0, sizeof(key_str));
                 memcpy(key_str, key_bin.data, key_bin.size);
+                key_str[key_bin.size] = '\0';
                 
                 // Try to extract value as binary
                 ErlNifBinary val_bin;
                 if (enif_inspect_binary(env, value, &val_bin) && val_bin.size < sizeof(val_str)) {
-                    memset(val_str, 0, sizeof(val_str));
                     memcpy(val_str, val_bin.data, val_bin.size);
+                    val_str[val_bin.size] = '\0';
                     impression.set_string_attr(key_str, val_str);
                 } else {
-                    // Try to extract value as double
+                    // Try to extract value as double or int
                     double dval;
-                    if (enif_get_double(env, value, &dval)) {
-                        impression.set_float_attr(key_str, static_cast<float>(dval));
-                    }
+                    int64_t ival;
+                    if (enif_get_int64(env, value, &ival))
+                        impression.set_int_attr(key_str, ival);
+                    else if (enif_get_double(env, value, &dval))
+                        impression.set_double_attr(key_str, dval);
                 }
             }
             
@@ -261,21 +311,23 @@ static ERL_NIF_TERM nif_match(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
             ERL_NIF_TERM order_map = enif_make_new_map(env);
             
             enif_make_map_put(env, order_map,
-                            atom_campaign_id,
+                            ATOMS.atom_campaign_id,
                             enif_make_string(env, order.campaign_id.c_str(), ERL_NIF_LATIN1),
                             &order_map);
             
             enif_make_map_put(env, order_map,
-                            atom_bid_cpm,
-                            enif_make_double(env, order.bid_cppm),
+                            ATOMS.atom_bid_cpm,
+                            enif_make_double(env, order.bid_cpm),
                             &order_map);
             
             order_terms.push_back(order_map);
         }
         
-        return order_terms.empty()
+        ERL_NIF_TERM result_list = order_terms.empty()
              ? enif_make_list(env, 0)
-             : enif_make_list_from_array(env, order_terms.data(), order_terms.size())
+             : enif_make_list_from_array(env, order_terms.data(), order_terms.size());
+        
+        return result_list;
     } catch (const std::exception& e) {
         return raise_error(env, e.what());
     }
@@ -285,31 +337,48 @@ static ERL_NIF_TERM nif_match(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
 // NIF Module Definition
 // ============================================================================
 
-static ErlNifFunc nif_funcs[] = {
-    {"build",        1, nif_build},
-    {"insert_order", 4, nif_insert_order},
-    {"match",        2, nif_match},
-};
-
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
-    UNUSED(priv_data);
-    UNUSED(load_info);
-    
+    uint32_t default_max_match = 100;
+
+    if (enif_is_map(env, load_info)) {
+        ERL_NIF_TERM max_match_term;
+        if (enif_get_map_value(env, load_info, ATOMS.atom_max_match, &max_match_term)) {
+            if (!enif_get_uint(env, max_match_term, &default_max_match))
+                return 2;
+        }
+    }
+
     // Create resource type
     ATREE_RESOURCE_TYPE = enif_open_resource_type(
         env, nullptr, "atree", tree_destructor, ERL_NIF_RT_CREATE, nullptr);
-    
+
+    auto tree_defaults = new TreeResourceDefaults(default_max_match);
+    *priv_data = static_cast<void*>(tree_defaults);
+
     if (!ATREE_RESOURCE_TYPE)
         return 1;
-    
+
     // Cache atoms
     ATOMS.atom_ok          = enif_make_atom(env, "ok");
     ATOMS.atom_error       = enif_make_atom(env, "error");
     ATOMS.atom_null_tree   = enif_make_atom(env, "null_tree");
     ATOMS.atom_campaign_id = enif_make_atom(env, "campaign_id");
     ATOMS.atom_bid_cpm     = enif_make_atom(env, "bid_cpm");
+    ATOMS.atom_max_match   = enif_make_atom(env, "max_match");
     
     return 0;
 }
 
-ERL_NIF_INIT(Elixir.Atree.Native, nif_funcs, on_load, nullptr, nullptr)
+static void on_unload(ErlNifEnv*, void* priv_data) {
+    auto tree_defaults = static_cast<TreeResourceDefaults*>(priv_data);
+    delete tree_defaults;
+}
+
+static ErlNifFunc nif_funcs[] = {
+    {"build",        1, nif_build},
+    {"insert_order", 4, nif_insert_order},
+    {"match",        2, nif_match},
+    {"match",        3, nif_match},
+};
+
+ERL_NIF_INIT(Elixir.Atree.Native, nif_funcs, on_load, nullptr, nullptr, on_unload)

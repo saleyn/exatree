@@ -20,7 +20,7 @@ defmodule Atree.Example do
     for i <- 1..count do
       %{
         campaign_id: "campaign-#{i}",
-        bid_cppm:    10.0 + :rand.uniform(40) + :rand.uniform(100) / 100,
+        bid_cpm:    10.0 + :rand.uniform(40) + :rand.uniform(100) / 100,
         attributes:  %{
           age_range:        Enum.random(age_ranges),
           interest:         Enum.random(interests),
@@ -140,7 +140,7 @@ defmodule Atree.Example do
     orders = [
       %{
         campaign_id: "nike-sports-live",
-        bid_cppm:    45.50,
+        bid_cpm:    45.50,
         attributes:  %{
           age_range:        "18-49",
           interest:         "sports",
@@ -155,7 +155,7 @@ defmodule Atree.Example do
       },
       %{
         campaign_id: "gatorade-fitness",
-        bid_cppm:    32.00,
+        bid_cpm:    32.00,
         attributes:  %{
           age_range:        "25-34",
           interest:         "fitness",
@@ -166,7 +166,7 @@ defmodule Atree.Example do
       },
       %{
         campaign_id: "apple-tech",
-        bid_cppm:    55.75,
+        bid_cpm:    55.75,
         attributes:  %{
           age_range:        "18-49",
           interest:         "shopping",

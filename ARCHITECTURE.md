@@ -94,7 +94,7 @@ struct ATreeNode {
 ```cpp
 struct StandingOrder {
     std::string campaign_id;
-    float bid_cppm;
+    float bid_cpm;
     int64_t daily_budget_remaining;
     FrequencyCap frequency_cap;
     BrandSafety brand_safety;
@@ -106,7 +106,7 @@ struct StandingOrder {
 struct Impression {
     std::unordered_map<> string_attrs;
     std::unordered_map<> int_attrs;
-    std::unordered_map<> float_attrs;
+    std::unordered_map<> double_attrs;
     uint64_t user_hash;
 };
 ```
@@ -160,7 +160,7 @@ Filter:
   1. Brand safety check
   2. Frequency cap evaluation
   ↓
-Sort: By bid_cppm descending
+Sort: By bid_cpm descending
   ↓
 Return: List of matching orders as Erlang terms
 ```

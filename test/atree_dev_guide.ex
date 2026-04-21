@@ -32,7 +32,7 @@ defmodule Atree.Dev.Guide do
     # Insert a single order
     order = %{
       campaign_id: "campaign-1",
-      bid_cppm: 32.50,
+      bid_cpm: 32.50,
       attributes: %{
         age_range: "18-49",
         interest: "sports",

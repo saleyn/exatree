@@ -67,26 +67,23 @@ void Impression::set_int_attr(const std::string& key, int64_t value) {
     int_attrs[key] = value;
 }
 
-void Impression::set_float_attr(const std::string& key, float value) {
-    float_attrs[key] = value;
+void Impression::set_double_attr(const std::string& key, double value) {
+    double_attrs[key] = static_cast<double>(value);
 }
 
 std::string Impression::get_string_attr(const std::string& key) const {
     auto it = string_attrs.find(key);
-    if (it != string_attrs.end()) return it->second;
-    return "";
+    return it != string_attrs.end() ? it->second : "";
 }
 
 int64_t Impression::get_int_attr(const std::string& key) const {
     auto it = int_attrs.find(key);
-    if (it != int_attrs.end()) return it->second;
-    return 0;
+    return it != int_attrs.end() ? it->second : 0;
 }
 
-float Impression::get_float_attr(const std::string& key) const {
-    auto it = float_attrs.find(key);
-    if (it != float_attrs.end()) return it->second;
-    return 0.0f;
+double Impression::get_double_attr(const std::string& key) const {
+    auto it = double_attrs.find(key);
+    return it != double_attrs.end() ? it->second : 0.0;
 }
 
 // ============================================================================
@@ -187,13 +184,13 @@ void ATreeBuilder::insert_order(ATree& root, const StandingOrder& order,
     
     // Map attribute names to dimension types
     std::vector<std::pair<DimensionType, std::string>> attrs_to_traverse = {
-        {DimensionType::AGE_RANGE, "age_range"},
-        {DimensionType::INTEREST, "interest"},
+        {DimensionType::AGE_RANGE,        "age_range"},
+        {DimensionType::INTEREST,         "interest"},
         {DimensionType::CONTENT_CATEGORY, "content_category"},
-        {DimensionType::CONTENT_EVENT, "content_event"},
-        {DimensionType::GEOGRAPHY, "geography"},
-        {DimensionType::TIME_OF_DAY, "time_of_day"},
-        {DimensionType::DEVICE_TYPE, "device_type"}
+        {DimensionType::CONTENT_EVENT,    "content_event"},
+        {DimensionType::GEOGRAPHY,        "geography"},
+        {DimensionType::TIME_OF_DAY,      "time_of_day"},
+        {DimensionType::DEVICE_TYPE,      "device_type"}
     };
     
     // Traverse and insert using proper dimensions only
@@ -242,7 +239,7 @@ std::vector<StandingOrder> ATreeMatcher::match(
     // Sort by bid price (descending)
     std::sort(safe_candidates.begin(), safe_candidates.end(),
               [](const StandingOrder& a, const StandingOrder& b) {
-                  return a.bid_cppm > b.bid_cppm;
+                  return a.bid_cpm > b.bid_cpm;
               });
     
     return safe_candidates;

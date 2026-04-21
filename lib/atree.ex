@@ -7,21 +7,27 @@ defmodule Atree.Native do
   """
 
   # Load the native compiled library
-  @on_load {:load_nifs, 0}
+  @on_load {:on_load, 0}
 
-  def load_nifs do
-    :erlang.load_nif(to_charlist(:code.priv_dir(:atree) ++ ~c"/atree"), 0)
+  def on_load do
+    options =
+      case Application.get_env(:atree, :default_max_match) do
+        nil -> %{}
+        max_match when is_integer(max_match) and max_match > 0 -> %{max_match: max_match}
+      end
+
+    :erlang.load_nif(to_charlist(:code.priv_dir(:atree) ++ ~c"/atree"), options)
   end
 
   @doc false
   def build(_unused), do: :erlang.nif_error(:not_loaded)
 
   @doc false
-  def insert_order(_tree_ref, _campaign_id, _bid_cppm, _attributes),
+  def insert_order(_tree_ref, _campaign_id, _bid_cpm, _attributes),
     do: :erlang.nif_error(:not_loaded)
 
   @doc false
-  def match(_tree_ref, _impression), do: :erlang.nif_error(:not_loaded)
+  def match(_tree_ref, _impression, _options \\ nil), do: :erlang.nif_error(:not_loaded)
 end
 
 defmodule Atree do
@@ -42,7 +48,7 @@ defmodule Atree do
       iex> tree = Atree.new()
       iex> order = %{
       ...>   campaign_id: "nike-001",
-      ...>   bid_cppm: 32.50,
+      ...>   bid_cpm: 32.50,
       ...>   attributes: %{
       ...>     age_range: "18-49",
       ...>     interest: "sports",
@@ -62,7 +68,7 @@ defmodule Atree do
 
   @type standing_order :: %{
     campaign_id: String.t(),
-    bid_cppm: float(),
+    bid_cpm: float(),
     attributes: map(),
     frequency_cap: frequency_cap() | nil,
     brand_safety: brand_safety() | nil
@@ -98,8 +104,7 @@ defmodule Atree do
   """
   @spec new() :: tree()
   def new do
-    {:ok, tree} = Atree.Native.build(nil)
-    tree
+    Atree.Native.build(nil)
   end
 
   @doc """
@@ -107,7 +112,7 @@ defmodule Atree do
 
   The standing order map should contain:
   - `:campaign_id` - Unique identifier for the campaign
-  - `:bid_cppm` - Bid price per thousand impressions
+  - `:bid_cpm` - Bid price per thousand impressions
   - `:attributes` - Map of attribute constraints (age_range, interest, etc.)
   - `:frequency_cap` (optional) - Frequency limits
   - `:brand_safety` (optional) - Brand safety rules
@@ -117,42 +122,40 @@ defmodule Atree do
   @spec insert_order(tree(), standing_order()) :: tree()
   def insert_order(tree, order) when is_reference(tree) and is_map(order) do
     campaign_id = order[:campaign_id] || raise "campaign_id required"
-    bid_cppm = order[:bid_cppm] || raise "bid_cppm required"
+    bid_cpm = order[:bid_cpm] || raise "bid_cpm required"
     attrs = order[:attributes] || %{}
 
     # Convert attributes map to list of tuples for NIF
     attr_list = attrs |> Map.to_list() |> Enum.map(fn {k, v} -> {to_string(k), to_string(v)} end)
 
-    {:ok, updated_tree} = Atree.Native.insert_order(tree, campaign_id, bid_cppm, attr_list)
-    updated_tree
+    Atree.Native.insert_order(tree, campaign_id, bid_cpm, attr_list)
   end
 
   @doc """
-  Match an impression against the tree to find relevant standing orders.
+  Matches impressions against a tree structure.
 
-  The impression map should contain attribute values that match the
-  dimensions in the tree structure:
-  - `age_range`: Age bracket (e.g., "18-49", "50-65", "65+")
-  - `interest`: User interest category
-  - `content_category`: Content category
-  - `content_event`: Type of content event
-  - `geography`: Geographic region
-  - `time_of_day`: Time bracket
-  - `device_type`: Device type
+  ## Parameters
+
+    * `tree` - A reference to the tree structure to match against
+    * `impression` - A map containing the impression data to match
+    * `options` - Optional map that may contain:
+      * `:max_match` - Integer to limit the maximum number of matches returned
+
+  ## Returns
 
   Returns list of matched_orders where matched_orders is a list of
-  standing orders sorted by bid price (highest first).
+  standing orders sorted by bid price (highest first), limited by `max_match`
+  if specified in options.
   """
-  @spec match(tree(), impression()) :: [map()]
-  def match(tree, impression) when is_reference(tree) and is_map(impression) do
+  @spec match(tree(), impression(), %{optional(:max_match) => non_neg_integer()} | nil) :: [map()]
+  def match(tree, impression, options \\ nil) when is_reference(tree) and is_map(impression) do
     # Convert impression to string-keyed map for NIF
     impression_map =
       impression
       |> Enum.map(fn {k, v} -> {to_string(k), to_string(v)} end)
       |> Enum.into(%{})
 
-    {:ok, matches} = Atree.Native.match(tree, impression_map)
-    matches
+    Atree.Native.match(tree, impression_map, options)
   end
 
   @doc """
@@ -185,7 +188,7 @@ defmodule Atree do
   Pretty-print a standing order.
   """
   @spec format_order(map()) :: String.t()
-  def format_order(%{campaign_id: id, bid_cppm: bid}) do
+  def format_order(%{campaign_id: id, bid_cpm: bid}) do
     "#{id} @ $#{bid |> Float.round(2)}"
   end
 
@@ -206,6 +209,6 @@ defmodule Atree do
   def filter_by_min_bid(tree, impression, min_bid) when is_float(min_bid) or is_integer(min_bid) do
     tree
     |> match(impression)
-    |> Enum.filter(fn order -> order.bid_cppm >= min_bid end)
+    |> Enum.filter(fn order -> order.bid_cpm >= min_bid end)
   end
 end

@@ -14,7 +14,7 @@ defmodule AtreeTest do
     test "insert single standing order", %{tree: tree} do
       order = %{
         campaign_id: "test-campaign-001",
-        bid_cppm: 25.50,
+        bid_cpm: 25.50,
         attributes: %{
           age_range: "18-49",
           interest: "sports",
@@ -30,7 +30,7 @@ defmodule AtreeTest do
       orders = [
         %{
           campaign_id: "nike-001",
-          bid_cppm: 32.50,
+          bid_cpm: 32.50,
           attributes: %{
             age_range: "18-49",
             interest: "sports",
@@ -39,7 +39,7 @@ defmodule AtreeTest do
         },
         %{
           campaign_id: "gatorade-001",
-          bid_cppm: 30.50,
+          bid_cpm: 30.50,
           attributes: %{
             age_range: "18-49",
             interest: "fitness",
@@ -57,7 +57,7 @@ defmodule AtreeTest do
     test "match impression against tree", %{tree: tree} do
       order = %{
         campaign_id: "test-001",
-        bid_cppm: 25.50,
+        bid_cpm: 25.50,
         attributes: %{
           age_range: "18-49",
           interest: "sports",
@@ -83,7 +83,7 @@ defmodule AtreeTest do
       orders = [
         %{
           campaign_id: "high-bid",
-          bid_cppm: 50.00,
+          bid_cpm: 50.00,
           attributes: %{
             age_range: "18-49",
             interest: "sports"
@@ -91,7 +91,7 @@ defmodule AtreeTest do
         },
         %{
           campaign_id: "medium-bid",
-          bid_cppm: 30.00,
+          bid_cpm: 30.00,
           attributes: %{
             age_range: "18-49",
             interest: "sports"
@@ -99,7 +99,7 @@ defmodule AtreeTest do
         },
         %{
           campaign_id: "low-bid",
-          bid_cppm: 10.00,
+          bid_cpm: 10.00,
           attributes: %{
             age_range: "18-49",
             interest: "sports"
@@ -120,7 +120,7 @@ defmodule AtreeTest do
       # Results should be sorted by bid (highest first)
       if length(results) >= 2 do
         [first | rest] = results
-        assert first.bid_cppm >= hd(rest).bid_cppm
+        assert first.bid_cpm >= hd(rest).bid_cpm
       end
     end
 
@@ -128,7 +128,7 @@ defmodule AtreeTest do
       orders = [
         %{
           campaign_id: "order-1",
-          bid_cppm: 25.50,
+          bid_cpm: 25.50,
           attributes: %{age_range: "18-49", interest: "sports"}
         }
       ]
@@ -150,9 +150,9 @@ defmodule AtreeTest do
   describe "utility functions" do
     test "top_n returns top n matched orders", %{tree: tree} do
       orders = [
-        %{campaign_id: "1", bid_cppm: 50.0, attributes: %{age_range: "18-49"}},
-        %{campaign_id: "2", bid_cppm: 40.0, attributes: %{age_range: "18-49"}},
-        %{campaign_id: "3", bid_cppm: 30.0, attributes: %{age_range: "18-49"}}
+        %{campaign_id: "1", bid_cpm: 50.0, attributes: %{age_range: "18-49"}},
+        %{campaign_id: "2", bid_cpm: 40.0, attributes: %{age_range: "18-49"}},
+        %{campaign_id: "3", bid_cpm: 30.0, attributes: %{age_range: "18-49"}}
       ]
 
       tree = Atree.insert_orders(tree, orders)
@@ -164,9 +164,9 @@ defmodule AtreeTest do
 
     test "filter_by_min_bid filters matched orders by minimum price", %{tree: tree} do
       orders = [
-        %{campaign_id: "1", bid_cppm: 50.0, attributes: %{age_range: "18-49"}},
-        %{campaign_id: "2", bid_cppm: 30.0, attributes: %{age_range: "18-49"}},
-        %{campaign_id: "3", bid_cppm: 10.0, attributes: %{age_range: "18-49"}}
+        %{campaign_id: "1", bid_cpm: 50.0, attributes: %{age_range: "18-49"}},
+        %{campaign_id: "2", bid_cpm: 30.0, attributes: %{age_range: "18-49"}},
+        %{campaign_id: "3", bid_cpm: 10.0, attributes: %{age_range: "18-49"}}
       ]
 
       tree = Atree.insert_orders(tree, orders)
@@ -176,12 +176,12 @@ defmodule AtreeTest do
 
       # All results should meet minimum bid
       Enum.each(filtered, fn order ->
-        assert order.bid_cppm >= 25.0
+        assert order.bid_cpm >= 25.0
       end)
     end
 
     test "format_order returns formatted string" do
-      order = %{campaign_id: "test-001", bid_cppm: 32.50}
+      order = %{campaign_id: "test-001", bid_cpm: 32.50}
       formatted = Atree.format_order(order)
       assert is_binary(formatted)
       assert String.contains?(formatted, ["test-001", "$32.5"])

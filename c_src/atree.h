@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <algorithm>
+#include <erl_nif.h>
 
 /**
  * A-Tree (Attribute Tree) - Multi-dimensional constraint matching
@@ -36,12 +37,12 @@ struct BrandSafety {
 
 struct StandingOrder {
     std::string campaign_id;
-    float bid_cppm;
+    float bid_cpm;
     int64_t daily_budget_remaining;
     FrequencyCap frequency_cap;
     BrandSafety brand_safety;
     
-    StandingOrder() : bid_cppm(0.0f), daily_budget_remaining(0) {}
+    StandingOrder() : bid_cpm(0.0f), daily_budget_remaining(0) {}
 };
 
 // Dimension types for A-Tree
@@ -88,16 +89,16 @@ using ATree = std::shared_ptr<ATreeNode>;
 struct Impression {
     std::unordered_map<std::string, std::string> string_attrs;
     std::unordered_map<std::string, int64_t> int_attrs;
-    std::unordered_map<std::string, float> float_attrs;
+    std::unordered_map<std::string, double> double_attrs;
     uint64_t user_hash;
     
     void set_string_attr(const std::string& key, const std::string& value);
     void set_int_attr(const std::string& key, int64_t value);
-    void set_float_attr(const std::string& key, float value);
+    void set_double_attr(const std::string& key, double value);
     
     std::string get_string_attr(const std::string& key) const;
     int64_t get_int_attr(const std::string& key) const;
-    float get_float_attr(const std::string& key) const;
+    double get_double_attr(const std::string& key) const;
 };
 
 // ============================================================================
@@ -178,7 +179,12 @@ make_binary(ErlNifEnv* env, const char* str)
 
 inline ERL_NIF_TERM raise_error(ErlNifEnv* env, const char* reason)
 {
-  return enif_raise_exception(env, make_binary(env, reason)));
+  return enif_raise_exception(env, make_binary(env, reason));
+}
+
+inline ERL_NIF_TERM raise_error(ErlNifEnv* env, ERL_NIF_TERM reason)
+{
+  return enif_raise_exception(env, reason);
 }
 
 #endif // ATREE_H

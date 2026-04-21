@@ -101,7 +101,7 @@ mix compile
 orders = [
   %{
     campaign_id: "nike-001",
-    bid_cppm: 32.50,
+    bid_cpm: 32.50,
     attributes: %{
       age_range: "18-49",
       interest: "sports",
@@ -118,7 +118,7 @@ orders = [
   },
   %{
     campaign_id: "gatorade-001",
-    bid_cppm: 30.50,
+    bid_cpm: 30.50,
     attributes: %{
       age_range: "18-49",
       interest: "fitness",
@@ -144,8 +144,8 @@ impression = %{
 
 {:ok, matched} = Atree.match(tree, impression)
 # [
-#   %{campaign_id: "nike-001", bid_cppm: 32.5},
-#   %{campaign_id: "gatorade-001", bid_cppm: 30.5}
+#   %{campaign_id: "nike-001", bid_cpm: 32.5},
+#   %{campaign_id: "gatorade-001", bid_cpm: 30.5}
 # ]
 ```
 
@@ -200,7 +200,7 @@ Memory usage: ~2KB per standing order (varies by attribute complexity)
 ```erlang
 #{ 
   campaign_id => "nike-001",
-  bid_cppm => 32.5,
+  bid_cpm => 32.5,
   daily_budget_remaining => 10000,
   frequency_cap => #{
     hourly_limit => 3,

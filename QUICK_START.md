@@ -42,7 +42,7 @@ If you see the reference, you're good to go! ✅
 orders = [
   %{
     campaign_id: "nike_sports",
-    bid_cppm: 45.50,
+    bid_cpm: 45.50,
     attributes: %{
       age_range: "18-49",
       interest: "sports",
@@ -54,7 +54,7 @@ orders = [
   },
   %{
     campaign_id: "gatorade_fitness",
-    bid_cppm: 32.00,
+    bid_cpm: 32.00,
     attributes: %{
       age_range: "25-34",
       interest: "fitness",
@@ -64,7 +64,7 @@ orders = [
   },
   %{
     campaign_id: "apple_tech",
-    bid_cppm: 55.75,
+    bid_cpm: 55.75,
     attributes: %{
       age_range: "18-49",
       interest: "shopping",
@@ -92,7 +92,7 @@ impression = %{
 
 # 6. See the results
 matched |> Enum.each(fn order ->
-  IO.puts("#{order.campaign_id} @ $#{Float.round(order.bid_cppm, 2)}")
+  IO.puts("#{order.campaign_id} @ $#{Float.round(order.bid_cpm, 2)}")
 end)
 
 # Output:
@@ -123,7 +123,7 @@ orders = File.stream!("orders.csv")
   |> Enum.map(fn row ->
     %{
       campaign_id: row["campaign_id"],
-      bid_cppm: String.to_float(row["bid_cppm"]),
+      bid_cpm: String.to_float(row["bid_cpm"]),
       attributes: %{
         age_range: row["age_range"],
         interest: row["interest"],

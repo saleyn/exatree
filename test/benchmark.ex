@@ -98,7 +98,7 @@ defmodule AtreeBenchmark do
 
       %{
         campaign_id: "campaign-#{i}",
-        bid_cppm: Float.round(:rand.uniform() * 100, 2),
+        bid_cpm: Float.round(:rand.uniform() * 100, 2),
         attributes: %{
           age_range: Enum.at(@age_ranges, age_idx),
           interest: Enum.at(@interests, interest_idx)
