@@ -9,17 +9,8 @@ defmodule AtreeBenchmark do
   - Speed (matches per microsecond)
   """
 
-# Age ranges - narrow down to ensure matches
-  @age_ranges ["18-49", "50+"]
-
-  # Interests - limited set
-  @interests ["sports", "fitness", "technology"]
-
-  # Content categories - limited set
-  #@categories ["sports", "news", "business"]
-
-  # Geographic regions - limited set
-  #@geographies ["US-EAST", "US-WEST", "EU"]
+# Age ranges - expanded for more diversity in matches
+  @age_ranges ["18-34", "35-49", "50+"]
 
   def run do
     IO.puts("\n" <> String.duplicate("=", 70))
@@ -67,7 +58,7 @@ defmodule AtreeBenchmark do
     IO.puts("Matched Impressions (> 0 orders):  #{matched_count}")
     IO.puts("Unmatched Impressions (no orders): #{unmatched_count}")
     IO.puts("Total matches found:               #{format_number(total_matches)}")
-    IO.puts("Total time:                        #{format_number(match_time)} μs")
+    IO.puts("Total time:                        #{:io_lib.format("~.3f", [match_time / 1_000_000])} s")
 
     speed_per_impression = match_time / 1_000
     IO.puts("Speed per impression:              #{Float.round(speed_per_impression, 2)} μs")
@@ -92,38 +83,46 @@ defmodule AtreeBenchmark do
   defp generate_orders(count) do
     1..count
     |> Enum.map(fn i ->
-      # Simplified: use only age_range and interest (verified to work in unit tests)
-      age_idx = rem(i, 2)
-      interest_idx = rem(i, 3)
+      # Vary age range to create both matches and mismatches
+      age_idx = rem(i, 3)
 
       %{
         campaign_id: "campaign-#{i}",
         bid_cpm: Float.round(:rand.uniform() * 100, 2),
         attributes: %{
           age_range: Enum.at(@age_ranges, age_idx),
-          interest: Enum.at(@interests, interest_idx)
+          interest: "sports",
+          content_category: "news"
         }
       }
     end)
   end
 
-  # Generate N random impressions with varied attributes - same as orders
+  # Generate N random impressions with varied attributes - creates both matches and unmatches
   defp generate_impressions(count) do
     1..count
     |> Enum.map(fn i ->
-      # Simplified: use only age_range and interest (verified to work in unit tests)
-      age_idx = rem(i, 2)
-      interest_idx = rem(i, 3)
+      # Create a mix of matching and non-matching impressions
+      age_cycle = rem(i, 10)
 
-      # Use specific values that will match the age ranges
-      age_value = case age_idx do
-        0 -> "25"  # Matches "18-49"
-        1 -> "55"  # Matches "50+"
+      # Age values: 8 out of 10 will fall within order ranges, 2 will not
+      age_value = case age_cycle do
+        0 -> "25"  # Matches "18-34"
+        1 -> "40"  # Matches "35-49"
+        2 -> "55"  # Matches "50+"
+        3 -> "30"  # Matches "18-34"
+        4 -> "45"  # Matches "35-49"
+        5 -> "65"  # Matches "50+"
+        6 -> "20"  # Matches "18-34"
+        7 -> "52"  # Matches "50+"
+        8 -> "10"  # Below "18-34" - no age match
+        9 -> "99"  # Above "50+" - no age match
       end
 
       %{
         age_range: age_value,
-        interest: Enum.at(@interests, interest_idx)
+        interest: "sports",
+        content_category: "news"
       }
     end)
   end
@@ -142,7 +141,7 @@ defmodule AtreeBenchmark do
   # Match all impressions and collect match counts
   defp match_all(tree, impressions) do
     Enum.map(impressions, fn impression ->
-      results = Atree.match(tree, impression)
+      results = Atree.match(tree, impression, %{max_match: 50})
       length(results)
     end)
   end

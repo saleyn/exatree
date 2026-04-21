@@ -2,5 +2,5 @@
 # Run A-Tree benchmark
 # Usage: mix run benchmark.exs
 
-Code.require_file("test/atree_benchmark.exs")
+Code.require_file("test/benchmark.ex")
 AtreeBenchmark.run()
