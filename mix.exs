@@ -11,6 +11,7 @@ defmodule Atree.MixProject do
       name:            "A-Tree",
       description:     "Multi-dimensional A-Tree for standing order filtering",
       package:         package(),
+      test_pattern:    "*_test.exs",
       test_coverage:   [
         output: ".cover",
         ignore_modules: [Atree.Native],

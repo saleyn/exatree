@@ -43,18 +43,25 @@ LDFLAGS    += $(ERL_LDFLAGS) -lei -shared
 SRC_DIR     = $(CURDIR)
 PRIV_DIR   ?= $(if $(REBAR_BARE_COMPILER_OUTPUT_DIR),$(REBAR_BARE_COMPILER_OUTPUT_DIR),$(BASEDIR))/priv
 SO_OUTPUT  ?= $(PRIV_DIR)/$(PROJECT).so
+XXHASH_URL  = https://raw.githubusercontent.com/redspah/xxhash_cpp/refs/heads/master/include/xxhash.hpp
+XXHASH_FILE = $(SRC_DIR)/xxhash.hpp
 
 # Source files
 SOURCES = atree.cpp atree_nif.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # Targets
-all: $(SO_OUTPUT)
+all: $(XXHASH_FILE) $(SO_OUTPUT)
 
-$(SO_OUTPUT): $(OBJECTS) $(PRIV_DIR)
+$(XXHASH_FILE):
+	@echo "Downloading xxHash C++ wrapper header..."
+	@curl -sf -L https://raw.githubusercontent.com/redspah/xxhash_cpp/refs/heads/master/include/xxhash.hpp -o $(XXHASH_FILE) || exit 1
+	@echo "✓ xxHash C++ wrapper header downloaded successfully"
+
+$(SO_OUTPUT): $(OBJECTS) $(PRIV_DIR) $(XXHASH_FILE)
 	$(CXX) -shared $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECTS)
 
-%.o: %.cpp atree.h
+%.o: %.cpp atree.h $(XXHASH_FILE)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(PRIV_DIR):
@@ -65,7 +72,13 @@ help:
 	@echo ""
 	@echo "  make all                      - Build the shared library (default)"
 	@echo "  make clean                    - Remove compiled objects and binaries"
+	@echo "  make distclean                - Remove all generated files including xxhash.hpp"
 	@echo "  make help                     - Show this help message"
 
 clean:
-	rm -f $(OBJECTS) $(SO_OUTPUT)
+	@rm -f $(OBJECTS) $(SO_OUTPUT)
+	@echo "Cleaned build artifacts"
+
+distclean: clean
+	@rm -f $(XXHASH_FILE)
+	@echo "Removed all downloaded dependencies (GTL, xxHash)"

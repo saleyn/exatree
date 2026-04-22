@@ -11,8 +11,9 @@ compile:
 	$(MAKE) -C c_src
 	@mix compile
 
-clean:
-	$(MAKE) -C c_src clean
+clean distclean:
+	$(MAKE) -C c_src $@
+	@rm -fr _build .cover erl_crash.dump
 	@mix clean
 
 test:
@@ -22,6 +23,6 @@ cover:
 	mix test --cover
 
 benchmark:
-	@mix test test/benchmark.ex
+	@mix test test/benchmark_test.exs
 
 .PHONY: test deps

@@ -50,6 +50,7 @@ static void tree_destructor(ErlNifEnv* env, void* obj) {
 static struct {
     ERL_NIF_TERM atom_ok;
     ERL_NIF_TERM atom_error;
+    ERL_NIF_TERM atom_nil;
     ERL_NIF_TERM atom_null_tree;
     ERL_NIF_TERM atom_bid_cpm;
     ERL_NIF_TERM atom_campaign_id;
@@ -89,13 +90,16 @@ static ERL_NIF_TERM nif_build(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
     res->max_match     = tree_defaults->default_max_match;
 
     if (argc > 0) {
-        if (!enif_is_map(env, argv[0]))
-            return raise_error(env, "options must be a map");
-        
-        ERL_NIF_TERM max_match_term;
-        if (enif_get_map_value(env, argv[0], ATOMS.atom_max_match, &max_match_term)) {
-            if (!enif_get_uint(env, max_match_term, &res->max_match))
-                return raise_error(env, "'max_match' value must be a positive integer");
+        // Handle nil as "no options"
+        if (argv[0] != ATOMS.atom_nil) {
+            if (!enif_is_map(env, argv[0]))
+                return raise_error(env, "options must be a map");
+            
+            ERL_NIF_TERM max_match_term;
+            if (enif_get_map_value(env, argv[0], ATOMS.atom_max_match, &max_match_term)) {
+                if (!enif_get_uint(env, max_match_term, &res->max_match))
+                    return raise_error(env, "'max_match' value must be a positive integer");
+            }
         }
     }
 
@@ -240,13 +244,16 @@ static ERL_NIF_TERM nif_match(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
     uint32_t take = tree_res->max_match;
     if (argc == 3) {
         ERL_NIF_TERM options = argv[2];
-        if (!enif_is_map(env, options))
-            return raise_error(env, "options must be a map");
+        // Handle nil as "no options"
+        if (options != ATOMS.atom_nil) {
+            if (!enif_is_map(env, options))
+                return raise_error(env, "options must be a map");
 
-        ERL_NIF_TERM take_term;
-        if (enif_get_map_value(env, options, ATOMS.atom_take, &take_term)) {
-            if (!enif_get_uint(env, take_term, &take))
-                return raise_error(env, "'take' value must be a positive integer");
+            ERL_NIF_TERM take_term;
+            if (enif_get_map_value(env, options, ATOMS.atom_take, &take_term)) {
+                if (!enif_get_uint(env, take_term, &take))
+                    return raise_error(env, "'take' value must be a positive integer");
+            }
         }
     }
 
@@ -271,15 +278,15 @@ static ERL_NIF_TERM nif_match(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
                 if (enif_inspect_binary(env, value, &val_bin) && val_bin.size < sizeof(val_str)) {
                     memcpy(val_str, val_bin.data, val_bin.size);
                     val_str[val_bin.size] = '\0';
-                    impression.set_string_attr(key_str, val_str);
+                    impression.set<std::string>(key_str, val_str);
                 } else {
                     // Try to extract value as double or int
                     double dval;
                     int64_t ival;
                     if (enif_get_int64(env, value, &ival))
-                        impression.set_int_attr(key_str, ival);
+                        impression.set<int64_t>(key_str, ival);
                     else if (enif_get_double(env, value, &dval))
-                        impression.set_double_attr(key_str, dval);
+                        impression.set<double>(key_str, dval);
                 }
             }
             
@@ -300,14 +307,13 @@ static ERL_NIF_TERM nif_match(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
         };
         
         ATreeMatcher matcher;
-        auto matched_orders = matcher.match(tree_res->tree, impression, dimension_order);
+        auto matched_orders = matcher.match(tree_res->tree, impression, dimension_order, tree_res->max_match);
         
         // Convert results to Erlang list of maps
         std::vector<ERL_NIF_TERM> order_terms;
+        order_terms.reserve(matched_orders.size());
         
         for (const auto& order : matched_orders) {
-            if (order_terms.size() >= 100) break;
-            
             ERL_NIF_TERM order_map = enif_make_new_map(env);
             
             enif_make_map_put(env, order_map,
@@ -361,10 +367,12 @@ static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
     // Cache atoms
     ATOMS.atom_ok          = enif_make_atom(env, "ok");
     ATOMS.atom_error       = enif_make_atom(env, "error");
+    ATOMS.atom_nil         = enif_make_atom(env, "nil");
     ATOMS.atom_null_tree   = enif_make_atom(env, "null_tree");
     ATOMS.atom_campaign_id = enif_make_atom(env, "campaign_id");
     ATOMS.atom_bid_cpm     = enif_make_atom(env, "bid_cpm");
     ATOMS.atom_max_match   = enif_make_atom(env, "max_match");
+    ATOMS.atom_take        = enif_make_atom(env, "take");
     
     return 0;
 }
