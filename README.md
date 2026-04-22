@@ -1,25 +1,29 @@
 # A-Tree: Multi-Dimensional Attribute Matching Library
 
+[![build](https://github.com/saleyn/exatree/actions/workflows/build.yml/badge.svg)](https://github.com/saleyn/exatree/actions/workflows/build.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/exatree.svg)](https://hex.pm/packages/exatree)
+[![Hex.pm](https://img.shields.io/hexpm/dt/exatree.svg)](https://hex.pm/packages/exatree)
+
 A high-performance C++ library with Elixir/Erlang NIF bindings for efficient standing order filtering using multi-dimensional attribute matching (A-Tree structure).
 
 ## Features
 
-✨ **Performance**
+* **Performance**
 - Sub-millisecond evaluation of thousands of standing orders
 - Efficient pruning through hierarchical tree traversal
 - Optimized for real-time bidding scenarios
 
-🌳 **Multi-Dimensional Matching**
+* **Multi-Dimensional Matching**
 - 8 key dimensions: Age, Interest, Content Category, Content Event, Geography, Time-of-Day, Device Type
 - Hierarchical content category support (e.g., sports → live sports → NCAA basketball)
 - Easily extensible to additional dimensions
 
-🛡️ **Brand Safety & Frequency Capping**
+* **Brand Safety & Frequency Capping**
 - Per-order brand safety rules and content exclusions
 - Atomic frequency cap evaluation (hourly, daily, weekly)
 - Budget tracking per standing order
 
-⚡ **Dynamic Updates**
+* **Dynamic Updates**
 - Add new standing orders without full tree rebuild
 - Minimal overhead for tree maintenance
 
