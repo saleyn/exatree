@@ -3,14 +3,20 @@ defmodule Atree.MixProject do
 
   def project do
     [
-      app: :atree,
-      version: "0.1.0",
-      elixir: "~> 1.14",
+      app:             :atree,
+      version:         "0.1.0",
+      elixir:          "~> 1.14",
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      name: "A-Tree",
-      description: "Multi-dimensional A-Tree for standing order filtering",
-      package: package()
+      deps:            deps(),
+      name:            "A-Tree",
+      description:     "Multi-dimensional A-Tree for standing order filtering",
+      package:         package(),
+      test_coverage:   [
+        output: ".cover",
+        ignore_modules: [Atree.Native],
+        #allow_failure: true,
+        summary: [threshold: 90]
+      ]
     ]
   end
 
@@ -38,8 +44,8 @@ defmodule Atree.MixProject do
         "LICENSE"
       ],
       maintainers: ["A-Tree Contributors"],
-      licenses: ["MIT"],
-      links: %{
+      licenses:    ["MIT"],
+      links:       %{
         "GitHub" => "https://github.com/yourusername/atree"
       }
     ]

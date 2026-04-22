@@ -1,0 +1,58 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        gcc-version: [ '12', '14' ]
+        otp-version: [ '27', '28' ]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Erlang
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp-version }}
+          elixir-version: 1.19
+      
+      - name: Install GCC ${{ matrix.gcc-version }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-${{ matrix.gcc-version }}
+      
+      - name: Set GCC as default
+        run: |
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.gcc-version }} 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.gcc-version }} 100
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${{ matrix.gcc-version }} 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-${{ matrix.gcc-version }} 100
+      
+      - name: Verify compiler versions
+        run: |
+          echo "GCC version:"
+          gcc --version
+          echo "G++ version:"
+          g++ --version
+          echo "Erlang version:"
+          erl -version
+      
+      - name: Get dependencies
+        run: mix deps.get
+      
+      - name: Compile
+        run: mix compile
+      
+      - name: Check code formatting
+        run: mix format --check-formatted
+        continue-on-error: true
+
+      - name: Run tests and enforce coverage threshold
+        run: mix test --cover

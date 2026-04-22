@@ -1,7 +1,7 @@
 # Elixir
 /_build
-/cover
 /deps
+.cover
 .fetch
 erl_crash.dump
 *.ez

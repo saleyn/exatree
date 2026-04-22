@@ -18,6 +18,9 @@ clean:
 test:
 	@mix $@
 
+cover:
+	mix test --cover
+
 benchmark:
 	@mix test test/benchmark.ex
 
