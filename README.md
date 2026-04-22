@@ -8,24 +8,24 @@ A high-performance C++ library with Elixir/Erlang NIF bindings for efficient sta
 
 ## Features
 
-* **Performance**
-- Sub-millisecond evaluation of thousands of standing orders
-- Efficient pruning through hierarchical tree traversal
-- Optimized for real-time bidding scenarios
+- **Performance**
+  - Sub-millisecond evaluation of thousands of standing orders
+  - Efficient pruning through hierarchical tree traversal
+  - Optimized for real-time bidding scenarios
 
-* **Multi-Dimensional Matching**
-- 8 key dimensions: Age, Interest, Content Category, Content Event, Geography, Time-of-Day, Device Type
-- Hierarchical content category support (e.g., sports → live sports → NCAA basketball)
-- Easily extensible to additional dimensions
+- **Multi-Dimensional Matching**
+  - 8 key dimensions: Age, Interest, Content Category, Content Event, Geography, Time-of-Day, Device Type
+  - Hierarchical content category support (e.g., sports → live sports → NCAA basketball)
+  - Easily extensible to additional dimensions
 
-* **Brand Safety & Frequency Capping**
-- Per-order brand safety rules and content exclusions
-- Atomic frequency cap evaluation (hourly, daily, weekly)
-- Budget tracking per standing order
+- **Brand Safety & Frequency Capping**
+  - Per-order brand safety rules and content exclusions
+  - Atomic frequency cap evaluation (hourly, daily, weekly)
+  - Budget tracking per standing order
 
-* **Dynamic Updates**
-- Add new standing orders without full tree rebuild
-- Minimal overhead for tree maintenance
+- **Dynamic Updates**
+  - Add new standing orders without full tree rebuild
+  - Minimal overhead for tree maintenance
 
 ## Architecture
 
