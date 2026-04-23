@@ -4,7 +4,7 @@ defmodule Atree.MixProject do
   def project do
     [
       app:             :atree,
-      version:         "0.1.0",
+      version:         "0.1.1",
       elixir:          "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps:            deps(),
@@ -44,10 +44,9 @@ defmodule Atree.MixProject do
         "README.md",
         "LICENSE"
       ],
-      maintainers: ["A-Tree Contributors"],
       licenses:    ["MIT"],
       links:       %{
-        "GitHub" => "https://github.com/yourusername/atree"
+        "GitHub" => "https://github.com/saleyn/atree"
       }
     ]
   end

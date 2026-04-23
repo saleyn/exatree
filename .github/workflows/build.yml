@@ -48,7 +48,7 @@ jobs:
         run: mix deps.get
       
       - name: Compile
-        run: mix compile
+        run: make
       
       - name: Check code formatting
         run: mix format --check-formatted
