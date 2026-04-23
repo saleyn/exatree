@@ -3,7 +3,7 @@ defmodule Atree.Dev.Guide do
   Development and troubleshooting guide for A-Tree library.
   """
 
-  @doc """
+  @doc       """
   Quick reference for common operations.
   """
   def quick_reference do
@@ -26,41 +26,34 @@ defmodule Atree.Dev.Guide do
 
     BASIC USAGE
     ──────────
-    # Create a tree
-    tree = Atree.new()
+    tree  = Atree.new() # Create a tree
 
-    # Insert a single order
-    order = %{
+    order = %{          # Insert a single order
       campaign_id: "campaign-1",
-      bid_cpm: 32.50,
-      attributes: %{
-        age_range: "18-49",
-        interest: "sports",
+      bid_cpm:     32.50,
+      attributes:  %{
+        age_range:        "18-49",
+        interest:         "sports",
         content_category: "sports"
       }
     }
-    tree = Atree.insert_order(tree, order)
+    tree       = Atree.insert_order(tree, order)
 
-    # Insert multiple orders
-    tree = Atree.insert_orders(tree, [order1, order2, order3])
+    tree       = Atree.insert_orders(tree, [order1, order2, order3]) # Insert multiple orders
 
-    # Match impression
-    impression = %{
-      age_range: "25",
-      interest: "sports",
+    impression = %{                                                  # Match impression
+      age_range:        "25",
+      interest:         "sports",
       content_category: "sports"
     }
     matched_orders = Atree.match(tree, impression)
 
-    # Get top 5 results
-    top_5 = Atree.top_n(tree, impression, 5)
+    top_5          = Atree.top_n(tree, impression, 5)                # Get top 5 results
 
-    # Filter by minimum bid
-    above_30 = Atree.filter_by_min_bid(tree, impression, 30.0)
+    above_30       = Atree.filter_by_min_bid(tree, impression, 30.0) # Filter by minimum bid
 
-    # Batch match multiple impressions
-    impressions = [imp1, imp2, imp3]
-    results = Atree.batch_match(tree, impressions)
+    impressions    = [imp1, imp2, imp3]                              # Batch match multiple impressions
+    results        = Atree.batch_match(tree, impressions)
 
     PERFORMANCE TIPS
     ────────────────

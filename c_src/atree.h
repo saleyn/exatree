@@ -18,7 +18,7 @@
 
 /**
  * A-Tree (Attribute Tree) - Multi-dimensional constraint matching
- * Optimized for standing order filtering by attributes
+ * Optimized for order filtering by attributes
  */
 
 // ============================================================================
@@ -211,7 +211,7 @@ public:
     // Build tree from scratch with dimension order (thread-safe)
     ATree build(const std::vector<DimensionType>& dimensions);
     
-    // Add standing order at correct leaf position (thread-safe)
+    // Add order at correct leaf position (thread-safe)
     // Note: Caller optionally acquires exclusive lock on root's node_mutex
     void insert_order(ATree& root, const StandingOrder& order, 
                       const std::map<std::string, std::string>& attribute_map);
@@ -232,7 +232,7 @@ class ATreeMatcher {
 public:
     ATreeMatcher();
     
-    // Match impression against tree, return ranked standing orders (thread-safe with read locks)
+    // Match impression against tree, return ranked orders (thread-safe with read locks)
     // max_match: 0 means no limit, >0 limits results
     std::vector<StandingOrder> match(
         const ATree& root,

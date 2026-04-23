@@ -7,7 +7,7 @@ all: compile
 deps:
 	mix deps.get
 
-compile:
+compile: fmt
 	$(MAKE) -C c_src
 	@mix compile
 
@@ -21,6 +21,9 @@ test:
 
 cover:
 	mix test --cover
+
+fmt:
+	mix format --check-formatted
 
 benchmark:
 	@mix test test/benchmark_test.exs

@@ -1,3 +1,4 @@
 %{
+  "exalign": {:hex, :exalign, "0.1.7", "7c3ec9c3da6942dea9ae33ad52fcfc780112c2dd81eb8d40cef0e1653c0a8b75", [:make, :mix], [], "hexpm", "f6ade5fe2acf8e9b08ed531e8967b9470832544eb8926ac404539b87e64f68de"},
   "nimble_parsec": {:hex, :nimble_parsec, "1.4.2", "8efba0122db06df95bfaa78f791344a89352ba04baedd3849593bfce4d0dc1c6", [:mix], [], "hexpm", "4b21398942dda052b403bbe1da991ccd03a053668d147d53fb8c4e0efe09c973"},
 }

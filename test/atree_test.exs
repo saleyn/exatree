@@ -11,13 +11,13 @@ defmodule AtreeTest do
       assert is_reference(tree)
     end
 
-    test "insert single standing order", %{tree: tree} do
+    test "insert single order", %{tree: tree} do
       order = %{
         campaign_id: "test-campaign-001",
-        bid_cpm: 25.50,
-        attributes: %{
-          age_range: "18-49",
-          interest: "sports",
+        bid_cpm:     25.50,
+        attributes:  %{
+          age_range:        "18-49",
+          interest:         "sports",
           content_category: "sports"
         }
       }
@@ -26,23 +26,23 @@ defmodule AtreeTest do
       assert is_reference(updated_tree)
     end
 
-    test "insert multiple standing orders", %{tree: tree} do
+    test "insert multiple orders", %{tree: tree} do
       orders = [
         %{
           campaign_id: "nike-001",
-          bid_cpm: 32.50,
-          attributes: %{
-            age_range: "18-49",
-            interest: "sports",
+          bid_cpm:     32.50,
+          attributes:  %{
+            age_range:        "18-49",
+            interest:         "sports",
             content_category: "sports"
           }
         },
         %{
           campaign_id: "gatorade-001",
-          bid_cpm: 30.50,
-          attributes: %{
-            age_range: "18-49",
-            interest: "fitness",
+          bid_cpm:     30.50,
+          attributes:  %{
+            age_range:        "18-49",
+            interest:         "fitness",
             content_category: "sports"
           }
         }
@@ -57,22 +57,22 @@ defmodule AtreeTest do
     test "match impression against tree", %{tree: tree} do
       order = %{
         campaign_id: "test-001",
-        bid_cpm: 25.50,
-        attributes: %{
-          age_range: "18-49",
-          interest: "sports",
+        bid_cpm:     25.50,
+        attributes:  %{
+          age_range:        "18-49",
+          interest:         "sports",
           content_category: "sports",
-          geography: "US-EAST"
+          geography:        "US-EAST"
         }
       }
 
-      tree = Atree.insert_order(tree, order)
+      tree       = Atree.insert_order(tree, order)
 
       impression = %{
-        age_range: "34",
-        interest: "sports",
+        age_range:        "34",
+        interest:         "sports",
         content_category: "sports",
-        geography: "US-EAST"
+        geography:        "US-EAST"
       }
 
       results = Atree.match(tree, impression)
@@ -83,35 +83,35 @@ defmodule AtreeTest do
       orders = [
         %{
           campaign_id: "high-bid",
-          bid_cpm: 50.00,
-          attributes: %{
+          bid_cpm:     50.00,
+          attributes:  %{
             age_range: "18-49",
-            interest: "sports"
+            interest:  "sports"
           }
         },
         %{
           campaign_id: "medium-bid",
-          bid_cpm: 30.00,
-          attributes: %{
+          bid_cpm:     30.00,
+          attributes:  %{
             age_range: "18-49",
-            interest: "sports"
+            interest:  "sports"
           }
         },
         %{
           campaign_id: "low-bid",
-          bid_cpm: 10.00,
-          attributes: %{
+          bid_cpm:     10.00,
+          attributes:  %{
             age_range: "18-49",
-            interest: "sports"
+            interest:  "sports"
           }
         }
       ]
 
-      tree = Atree.insert_orders(tree, orders)
+      tree       = Atree.insert_orders(tree, orders)
 
       impression = %{
         age_range: "34",
-        interest: "sports"
+        interest:  "sports"
       }
 
       results = Atree.match(tree, impression)
@@ -128,12 +128,12 @@ defmodule AtreeTest do
       orders = [
         %{
           campaign_id: "order-1",
-          bid_cpm: 25.50,
-          attributes: %{age_range: "18-49", interest: "sports"}
+          bid_cpm:     25.50,
+          attributes:  %{age_range: "18-49", interest: "sports"}
         }
       ]
 
-      tree = Atree.insert_orders(tree, orders)
+      tree        = Atree.insert_orders(tree, orders)
 
       impressions = [
         %{age_range: "34", interest: "sports"},
@@ -155,7 +155,7 @@ defmodule AtreeTest do
         %{campaign_id: "3", bid_cpm: 30.0, attributes: %{age_range: "18-49"}}
       ]
 
-      tree = Atree.insert_orders(tree, orders)
+      tree  = Atree.insert_orders(tree, orders)
 
       top_2 = Atree.top_n(tree, %{age_range: "25"}, 2)
       assert is_list(top_2)
@@ -169,19 +169,17 @@ defmodule AtreeTest do
         %{campaign_id: "3", bid_cpm: 10.0, attributes: %{age_range: "18-49"}}
       ]
 
-      tree = Atree.insert_orders(tree, orders)
+      tree     = Atree.insert_orders(tree, orders)
 
       filtered = Atree.filter_by_min_bid(tree, %{age_range: "25"}, 25.0)
       assert is_list(filtered)
 
       # All results should meet minimum bid
-      Enum.each(filtered, fn order ->
-        assert order.bid_cpm >= 25.0
-      end)
+      Enum.each(filtered, fn order -> assert order.bid_cpm >= 25.0 end)
     end
 
     test "format_order returns formatted string" do
-      order = %{campaign_id: "test-001", bid_cpm: 32.50}
+      order     = %{campaign_id: "test-001", bid_cpm: 32.50}
       formatted = Atree.format_order(order)
       assert is_binary(formatted)
       assert String.contains?(formatted, ["test-001", "$32.5"])

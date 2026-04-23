@@ -9,14 +9,13 @@ defmodule Atree.MixProject do
       start_permanent: Mix.env() == :prod,
       deps:            deps(),
       name:            "A-Tree",
-      description:     "Multi-dimensional A-Tree for standing order filtering",
+      description:     "Multi-dimensional A-Tree for order filtering",
       package:         package(),
       test_pattern:    "*_test.exs",
       test_coverage:   [
-        output: ".cover",
+        output:         ".cover",
         ignore_modules: [Atree.Native],
-        #allow_failure: true,
-        summary: [threshold: 90]
+        summary:        [threshold: 90]  # allow_failure: true,
       ]
     ]
   end
@@ -29,7 +28,8 @@ defmodule Atree.MixProject do
 
   defp deps do
     [
-      {:nimble_parsec, "~> 1.4", only: :dev}
+      {:nimble_parsec, "~> 1.4",   only: :dev},
+      {:exalign,       "~> 0.1.7", only: :dev}
     ]
   end
 
@@ -44,9 +44,9 @@ defmodule Atree.MixProject do
         "README.md",
         "LICENSE"
       ],
-      licenses:    ["MIT"],
-      links:       %{
-        "GitHub" => "https://github.com/saleyn/atree"
+      licenses: ["MIT"],
+      links:    %{
+        "GitHub" => "https://github.com/saleyn/exatree"
       }
     ]
   end

@@ -4,12 +4,12 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/exatree.svg)](https://hex.pm/packages/exatree)
 [![Hex.pm](https://img.shields.io/hexpm/dt/exatree.svg)](https://hex.pm/packages/exatree)
 
-A high-performance C++ library with Elixir/Erlang NIF bindings for efficient standing order filtering using multi-dimensional attribute matching (A-Tree structure).
+A high-performance C++ library with Elixir/Erlang NIF bindings for efficient order filtering using multi-dimensional attribute matching (A-Tree structure).
 
 ## Features
 
 - **Performance**
-  - Sub-millisecond evaluation of thousands of standing orders
+  - Sub-millisecond evaluation of thousands of orders
   - Efficient pruning through hierarchical tree traversal
   - Optimized for real-time bidding scenarios
 
@@ -21,20 +21,20 @@ A high-performance C++ library with Elixir/Erlang NIF bindings for efficient sta
 - **Brand Safety & Frequency Capping**
   - Per-order brand safety rules and content exclusions
   - Atomic frequency cap evaluation (hourly, daily, weekly)
-  - Budget tracking per standing order
+  - Budget tracking per order
 
 - **Dynamic Updates**
-  - Add new standing orders without full tree rebuild
+  - Add new orders without full tree rebuild
   - Minimal overhead for tree maintenance
 
 ## Architecture
 
 ### A-Tree Structure
 
-The A-Tree organizes standing orders hierarchically by attribute dimensions:
+The A-Tree organizes orders hierarchically by attribute dimensions:
 
 ```
-Standing Order Index Tree
+Order Index Tree
 ├── Age Range (18-49, 50-65, 65+)
 │   ├── Interest (sports, fitness, travel, shopping)
 │   │   ├── Content Category (sports, news, entertainment, adult)
@@ -54,7 +54,7 @@ When an impression arrives:
 3. **Evaluate Filters**: Apply brand safety and frequency cap checks
 4. **Sort & Return**: Return orders sorted by bid price (highest first)
 
-**Time Complexity**: O(D × log N) where D = dimensions, N = standing orders
+**Time Complexity**: O(D × log N) where D = dimensions, N = orders
 
 ### C++ Implementation Files
 
@@ -79,8 +79,8 @@ When an impression arrives:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/atree.git
-cd atree
+git clone https://github.com/saleyn/exatree.git
+cd exatree
 ```
 
 2. Install dependencies:
@@ -101,7 +101,7 @@ mix compile
 # Create a new A-Tree
 {:ok, tree} = Atree.new()
 
-# Define standing orders
+# Define orders
 orders = [
   %{
     campaign_id: "nike-001",
@@ -186,7 +186,7 @@ impressions = [
 
 ## Performance Characteristics
 
-Benchmarks (measured on Intel i7, 1000 standing orders):
+Benchmarks (measured on Intel i7, 1000 orders):
 
 | Operation | Time |
 |-----------|------|
@@ -195,11 +195,11 @@ Benchmarks (measured on Intel i7, 1000 standing orders):
 | Match single impression | ~0.5ms |
 | Batch match 100 impressions | ~50ms |
 
-Memory usage: ~2KB per standing order (varies by attribute complexity)
+Memory usage: ~2KB per order (varies by attribute complexity)
 
 ## Data Structure Details
 
-### Standing Order
+### Order
 
 ```erlang
 #{ 
@@ -293,5 +293,5 @@ MIT License - See LICENSE file for details
 ## References
 
 - **A-Tree Concept**: Efficient multi-dimensional indexing for database systems
-- **Real-Time Bidding**: Glass-Book standing order matching optimization
+- **Real-Time Bidding**: Glass-Book order matching optimization
 - **NIF Development**: Erlang R13+ Native Implemented Functions

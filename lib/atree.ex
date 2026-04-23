@@ -6,13 +6,12 @@ defmodule Atree.Native do
   use the higher-level Atree module instead.
   """
 
-  # Load the native compiled library
-  @on_load {:on_load, 0}
+  @on_load   {:on_load, 0}  # Load the native compiled library
 
   def on_load do
     options =
       case Application.get_env(:atree, :default_max_match) do
-        nil -> %{}
+        nil                                                    -> %{}
         max_match when is_integer(max_match) and max_match > 0 -> %{max_match: max_match}
       end
 
@@ -33,11 +32,11 @@ end
 defmodule Atree do
   @moduledoc """
   A-Tree (Attribute Tree) - Multi-dimensional constraint matching library
-  for efficient standing order filtering by attributes.
+  for efficient order filtering by attributes.
 
   ## Features
 
-  - Sub-millisecond evaluation of thousands of standing orders
+  - Sub-millisecond evaluation of thousands of orders
   - Multi-dimensional constraint matching (8 dimensions)
   - Hierarchical structure for content categories
   - Fast dynamic updates
@@ -67,28 +66,28 @@ defmodule Atree do
   """
 
   @type standing_order :: %{
-    campaign_id: String.t(),
-    bid_cpm: float(),
-    attributes: map(),
-    frequency_cap: frequency_cap() | nil,
-    brand_safety: brand_safety() | nil
-  }
+          campaign_id:   String.t(),
+          bid_cpm:       float(),
+          attributes:    map(),
+          frequency_cap: frequency_cap() | nil,
+          brand_safety:  brand_safety() | nil
+        }
 
   @type frequency_cap :: %{
-    hourly_limit: non_neg_integer(),
-    daily_limit: non_neg_integer(),
-    weekly_limit: non_neg_integer()
-  }
+          hourly_limit: non_neg_integer(),
+          daily_limit:  non_neg_integer(),
+          weekly_limit: non_neg_integer()
+        }
 
   @type brand_safety :: %{
-    excluded_categories: [String.t()],
-    excluded_keywords: [String.t()],
-    require_age_gate: boolean()
-  }
+          excluded_categories: [String.t()],
+          excluded_keywords:   [String.t()],
+          require_age_gate:    boolean()
+        }
 
   @type impression :: %{
-    String.t() => String.t() | integer() | float()
-  }
+          String.t() => String.t() | integer() | float()
+        }
 
   @type tree :: reference() | nil
   @type matcher :: reference() | nil
@@ -97,7 +96,7 @@ defmodule Atree do
   # Public API
   # ============================================================================
 
-  @doc """
+  @doc  """
   Create a new empty A-Tree.
 
   Returns `tree()` on success.
@@ -107,10 +106,10 @@ defmodule Atree do
     Atree.Native.build(nil)
   end
 
-  @doc """
-  Insert a standing order into the tree.
+  @doc  """
+  Insert a order into the tree.
 
-  The standing order map should contain:
+  The order map should contain:
   - `:campaign_id` - Unique identifier for the campaign
   - `:bid_cpm` - Bid price per thousand impressions
   - `:attributes` - Map of attribute constraints (age_range, interest, etc.)
@@ -122,8 +121,8 @@ defmodule Atree do
   @spec insert_order(tree(), standing_order()) :: tree()
   def insert_order(tree, order) when is_reference(tree) and is_map(order) do
     campaign_id = order[:campaign_id] || raise "campaign_id required"
-    bid_cpm = order[:bid_cpm] || raise "bid_cpm required"
-    attrs = order[:attributes] || %{}
+    bid_cpm     = order[:bid_cpm] || raise "bid_cpm required"
+    attrs       = order[:attributes] || %{}
 
     # Convert attributes map to list of tuples for NIF
     attr_list = attrs |> Map.to_list() |> Enum.map(fn {k, v} -> {to_string(k), to_string(v)} end)
@@ -144,13 +143,12 @@ defmodule Atree do
   ## Returns
 
   Returns list of matched_orders where matched_orders is a list of
-  standing orders sorted by bid price (highest first), limited by `max_match`
+  orders sorted by bid price (highest first), limited by `max_match`
   if specified in options.
   """
   @spec match(tree(), impression(), %{optional(:max_match) => non_neg_integer()} | nil) :: [map()]
   def match(tree, impression, options \\ nil) when is_reference(tree) and is_map(impression) do
-    # Convert impression to string-keyed map for NIF
-    impression_map =
+    impression_map =  # Convert impression to string-keyed map for NIF
       impression
       |> Enum.map(fn {k, v} -> {to_string(k), to_string(v)} end)
       |> Enum.into(%{})
@@ -158,19 +156,17 @@ defmodule Atree do
     Atree.Native.match(tree, impression_map, options)
   end
 
-  @doc """
-  Insert multiple standing orders at once.
+  @doc  """
+  Insert multiple orders at once.
 
   Returns `tree()` if all orders are inserted successfully or raises an exception.
   """
   @spec insert_orders(tree(), [standing_order()]) :: tree()
   def insert_orders(tree, orders) when is_reference(tree) and is_list(orders) do
-    Enum.reduce(orders, tree, fn order, current_tree ->
-      insert_order(current_tree, order)
-    end)
+    Enum.reduce(orders, tree, fn order, current_tree -> insert_order(current_tree, order) end)
   end
 
-  @doc """
+  @doc  """
   Batch match multiple impressions.
 
   Returns a list of `{impression, orders}` tuples. Raises an exception on error.
@@ -184,15 +180,15 @@ defmodule Atree do
   # Utility Functions
   # ============================================================================
 
-  @doc """
-  Pretty-print a standing order.
+  @doc  """
+  Pretty-print a order.
   """
   @spec format_order(map()) :: String.t()
   def format_order(%{campaign_id: id, bid_cpm: bid}) do
     "#{id} @ $#{bid |> Float.round(2)}"
   end
 
-  @doc """
+  @doc  """
   Get the top N matched orders by bid price.
   """
   @spec top_n(tree(), impression(), non_neg_integer()) :: [map()]
@@ -202,11 +198,12 @@ defmodule Atree do
     |> Enum.take(n)
   end
 
-  @doc """
+  @doc  """
   Filter matched orders by minimum bid price.
   """
   @spec filter_by_min_bid(tree(), impression(), float()) :: [map()]
-  def filter_by_min_bid(tree, impression, min_bid) when is_float(min_bid) or is_integer(min_bid) do
+  def filter_by_min_bid(tree, impression, min_bid)
+      when is_float(min_bid) or is_integer(min_bid) do
     tree
     |> match(impression)
     |> Enum.filter(fn order -> order.bid_cpm >= min_bid end)

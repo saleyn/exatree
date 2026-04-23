@@ -6,7 +6,7 @@ defmodule Atree.Example do
   require Logger
 
   @doc       """
-  Generate sample standing orders for demonstration.
+  Generate sample orders for demonstration.
   """
   def generate_sample_orders(count \\ 100) do
     age_ranges  = ["18-24", "25-34", "35-49", "50-64", "65+"]
@@ -20,7 +20,7 @@ defmodule Atree.Example do
     for i <- 1..count do
       %{
         campaign_id: "campaign-#{i}",
-        bid_cpm:    10.0 + :rand.uniform(40) + :rand.uniform(100) / 100,
+        bid_cpm:     10.0 + :rand.uniform(40) + :rand.uniform(100) / 100,
         attributes:  %{
           age_range:        Enum.random(age_ranges),
           interest:         Enum.random(interests),
@@ -101,8 +101,7 @@ defmodule Atree.Example do
       "Match #{impression_count} impressions: #{match_time}ms avg #{match_time / impression_count}ms/impression"
     )
 
-    # Analyze results
-    total_matches =
+    total_matches =  # Analyze results
       results
       |> Enum.map(fn orders -> length(orders) end)
       |> Enum.sum()
@@ -131,16 +130,16 @@ defmodule Atree.Example do
 
     # 1. Create tree
     Logger.info("1. Creating A-Tree...")
-    tree = Atree.new()
+    tree   = Atree.new()
     Logger.info("   ✓ Tree created\n")
 
-    # 2. Define standing orders
-    Logger.info("2. Defining standing orders...")
+    # 2. Define orders
+    Logger.info("2. Defining orders...")
 
     orders = [
       %{
         campaign_id: "nike-sports-live",
-        bid_cpm:    45.50,
+        bid_cpm:     45.50,
         attributes:  %{
           age_range:        "18-49",
           interest:         "sports",
@@ -155,7 +154,7 @@ defmodule Atree.Example do
       },
       %{
         campaign_id: "gatorade-fitness",
-        bid_cpm:    32.00,
+        bid_cpm:     32.00,
         attributes:  %{
           age_range:        "25-34",
           interest:         "fitness",
@@ -166,7 +165,7 @@ defmodule Atree.Example do
       },
       %{
         campaign_id: "apple-tech",
-        bid_cpm:    55.75,
+        bid_cpm:     55.75,
         attributes:  %{
           age_range:        "18-49",
           interest:         "shopping",
@@ -177,11 +176,11 @@ defmodule Atree.Example do
       }
     ]
 
-    Logger.info("   ✓ #{length(orders)} standing orders defined\n")
+    Logger.info("   ✓ #{length(orders)} orders defined\n")
 
     # 3. Insert orders
     Logger.info("3. Inserting orders into tree...")
-    tree = Atree.insert_orders(tree, orders)
+    tree       = Atree.insert_orders(tree, orders)
     Logger.info("   ✓ All orders inserted\n")
 
     # 4. Create test impression
@@ -199,8 +198,7 @@ defmodule Atree.Example do
 
     Logger.info("   Impression: #{inspect(impression)}\n")
 
-    # 5. Match and display results
-    matched = Atree.match(tree, impression)
+    matched = Atree.match(tree, impression) # 5. Match and display results
     Logger.info("5. Matching results:")
     Logger.info("   Found #{length(matched)} matching orders\n")
 
@@ -208,16 +206,13 @@ defmodule Atree.Example do
 
     Logger.info("\n6. Advanced queries:")
 
-    # Top N
-    top_1 = Atree.top_n(tree, impression, 1)
+    top_1       = Atree.top_n(tree, impression, 1)                # Top N
     Logger.info("   Top 1 bid: #{Atree.format_order(hd(top_1))}")
 
-    # Min bid filter
-    above_40 = Atree.filter_by_min_bid(tree, impression, 40.0)
+    above_40    = Atree.filter_by_min_bid(tree, impression, 40.0) # Min bid filter
     Logger.info("   Orders >= $40 CPM: #{length(above_40)} orders")
 
-    # Batch matching
-    impressions = [
+    impressions = [                                               # Batch matching
       %{age_range: "25", interest: "sports", content_category: "sports"},
       %{age_range: "35", interest: "fitness", content_category: "entertainment"}
     ]

@@ -249,7 +249,7 @@ std::vector<StandingOrder> ATreeMatcher::match(
     // Traverse tree to find matching nodes
     auto matching_nodes = traverse(root, impression, dimension_order);
     
-    // Collect all standing orders from matching nodes
+    // Collect all orders from matching nodes
     // Estimate capacity: assume 10 orders per node on average
     std::vector<StandingOrder> candidates;
     candidates.reserve(matching_nodes.size() * 10);

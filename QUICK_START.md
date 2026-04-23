@@ -38,7 +38,7 @@ If you see the reference, you're good to go! ✅
 # 1. Create a new empty tree
 {:ok, tree} = Atree.new()
 
-# 2. Create some standing orders
+# 2. Create some orders
 orders = [
   %{
     campaign_id: "nike_sports",
@@ -254,10 +254,10 @@ erl -eval "erlang:system_info(otp_release), halt(0)." -noshell
 
 ## Performance Notes
 
-On a modern CPU with 1000 standing orders:
+On a modern CPU with 1000 orders:
 - **Insert operation**: ~0.1ms per order
 - **Match operation**: ~0.5ms per impression
-- **Memory**: ~2KB per standing order
+- **Memory**: ~2KB per order
 
 For production use with 10k+ orders, expect ~5-10ms matching time.
 

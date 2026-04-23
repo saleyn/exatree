@@ -2,7 +2,7 @@
 
 ## Overview
 
-A-Tree is a multi-dimensional attribute indexing library optimized for real-time standing order matching. It combines:
+A-Tree is a multi-dimensional attribute indexing library optimized for real-time order matching. It combines:
 
 1. **C++ Core** - High-performance tree operations
 2. **Erlang NIF Interface** - Seamless Erlang/Elixir integration
@@ -115,7 +115,7 @@ struct Impression {
 
 #### ATreeBuilder
 - Constructs tree structure
-- Inserts standing orders at correct leaf positions
+- Inserts orders at correct leaf positions
 - Maintains dimension hierarchy
 
 #### ATreeMatcher
@@ -154,7 +154,7 @@ Tree Traversal:
     Find matching children
     Prune branches that don't match
   ↓
-Collect Standing Orders: Gather all orders from leaf nodes
+Collect Orders: Gather all orders from leaf nodes
   ↓
 Filter:
   1. Brand safety check
