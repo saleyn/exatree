@@ -15,7 +15,7 @@ defmodule Atree.MixProject do
       test_coverage:   [
         output:         ".cover",
         ignore_modules: [Atree.Native],
-        summary:        [threshold: 90]  # allow_failure: true,
+        summary:        [threshold: 90]
       ]
     ]
   end
