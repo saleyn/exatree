@@ -25,15 +25,12 @@
 // Custom Hash Functions
 // ============================================================================
 
-namespace std {
-    // Custom hash function for std::string using xxhash
-    template <>
-    struct hash<std::string> {
-        size_t operator()(const std::string& s) const noexcept {
-            return xxh::xxhash<64>(s);
-        }
-    };
-}
+// Custom hash function for std::string using xxhash
+struct StringHasher {
+    size_t operator()(const std::string& s) const noexcept {
+        return xxh::xxhash<64>(s);
+    }
+};
 
 // ============================================================================
 // Data Structures
@@ -81,7 +78,7 @@ enum class DimensionType {
 struct ValueRange {
     std::string min_val;
     std::string max_val;
-    std::unordered_set<std::string> discrete_values;  // Use hash set for O(1) lookup
+    std::unordered_set<std::string, StringHasher> discrete_values;  // Use hash set for O(1) lookup
     
     // Cached parsed values for performance
     mutable int64_t  cached_min = std::numeric_limits<int64_t>::min();
@@ -100,7 +97,7 @@ struct ATreeNode {
     ValueRange    value_range;
     
     std::vector<std::unique_ptr<ATreeNode>>     children;      // Changed from shared_ptr to unique_ptr
-    std::unordered_map<std::string, ATreeNode*> children_map;  // Index for O(1) lookup (uses xxhash for std::string keys)
+    std::unordered_map<std::string, ATreeNode*, StringHasher> children_map;  // Index for O(1) lookup (uses xxhash for std::string keys)
     std::vector<StandingOrder>                  leaf_orders;   // Only populated at leaves
     
     // Mutable mutex for thread-safe access
@@ -139,7 +136,7 @@ struct Impression {
     // Unified attribute value type
     using AttrValue = std::variant<int64_t, std::string, double, bool>;
     
-    std::unordered_map<std::string, AttrValue> attrs;
+    std::unordered_map<std::string, AttrValue, StringHasher> attrs;
     uint64_t user_hash;
     
     // Cached string values for the 7 standard dimensions (performance optimization)
@@ -256,7 +253,7 @@ public:
     // Evaluate frequency constraints (atomic lookup)
     bool check_frequency(const StandingOrder& order,
                         const Impression& impression,
-                        const std::unordered_map<std::string, uint32_t>& frequency_map) const;
+                        const std::unordered_map<std::string, uint32_t, StringHasher>& frequency_map) const;
     
 private:
     // Recursive tree traversal with read locks

@@ -379,7 +379,7 @@ bool ATreeMatcher::check_brand_safety(const StandingOrder& order,
 
 bool ATreeMatcher::check_frequency(const StandingOrder& order,
                                   const Impression& impression,
-                                  const std::unordered_map<std::string, uint32_t>& frequency_map) const {
+                                  const std::unordered_map<std::string, uint32_t, StringHasher>& frequency_map) const {
     // Create frequency key: user_hash:campaign_id
     std::string freq_key = std::to_string(impression.user_hash) + ":" + order.campaign_id;
     
